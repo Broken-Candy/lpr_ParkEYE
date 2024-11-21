@@ -1,0 +1,103 @@
+/* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+header {
+    font-family: 'Arial', sans-serif;
+    text-align: center;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    color: white;
+    padding: 20px 0;
+}
+
+header h1 {
+    font-size: 2rem;
+    margin: 0;
+    color: white;
+    font-size: 70px;
+    font-weight: 700;
+    letter-spacing: 8px;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    position: relative;
+    animation: text 3s 1;
+}
+
+header p {
+    margin: 10px 0;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    min-height: 60vh;
+}
+
+/* Options Buttons */
+.options {
+    margin-top: 20px;
+}
+
+.button {
+    background: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin: 10px;
+    font-size: 1rem;
+    display: inline-block;
+    text-align: center;
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.button:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 15px;
+    background: #333;
+    color: white;
+    font-size: 0.9rem;
+}
+
+footer p {
+    margin: 0;
+}
+
+footer p a {
+    color: #4facfe;
+    text-decoration: none;
+}
+
+footer p a:hover {
+    text-decoration: underline;
+}
+
+@keyframes text {
+    0% {
+        color: black;
+        margin-bottom: -40px;
+    }
+    30% {
+        letter-spacing: 25px;
+        margin-bottom: -40px;
+    }
+    85% {
+        letter-spacing: 8px;
+        margin-bottom: -40px;
+    }
+}
+

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="styles for adamin.css">
+</head>
+<body>
+    <header>
+        <h1>Admin Login</h1>
+    </header>
+    <main>
+        <div id="card">
+        <form id="login-form">
+            <label for="email">Email:</label>
+            <input type="text" id="email" name="username_vehicle" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button class='btn' id="submitLogIn" type="submit">Login</button>
+        </form>
+    </div>
+    </main>
+    <footer>
+        <a href="user.html">Back</a>
+    </footer>
+    <script>
+        // Define constant login credentials
+        const VALID_EMAIL = "candy@gmail.com";
+        const VALID_PASSWORD = "candy";
+
+        
+        document.getElementById("login-form").addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+
+         
+            if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+                
+                window.location.href = "admindashboard.html";
+            } else {
+                // Display an error message
+                alert("Invalid email or password. Please try again.");
+            }
+        });
+    </script>
+</body>
+</html>

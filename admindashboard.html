@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="stylesforadmindashboard.css">
+</head>
+<body>
+    <header>
+        <h1>Welcome to Your Dashboard</h1>
+    </header>
+    <br>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by Vehicle No or Username" onkeyup="searchTable()" />
+    </div>
+    <br>
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>Vehicle No</th>
+                <th>Username</th>
+                <th>E-Mail</th>
+                <th>Phone No</th>
+                <th>Balance</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Dynamic rows will be inserted here -->
+        </tbody>
+    </table>
+
+   <div class="an">
+        <a href="index.html">Back to Homepage</a>
+    </div>
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>

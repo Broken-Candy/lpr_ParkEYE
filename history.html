@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle History</title>
+    <link rel="stylesheet" href="stylesforhistory.css">
+    <script type="module" src="app.js"></script> <!-- Ensure app.js is a module -->
+</head>
+<body>
+    <header>
+        <h1>Vehicle Charging History</h1>
+    </header>
+    <main>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Distance</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+        </table>
+        <a href="dashboard.html" class="button">Back to Dashboard</a>
+
+        <script type="module">
+            import { ref, get } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-database.js";
+            import { database } from "./app.js";
+        
+            async function displayVehicleHistory() {
+                const userId = localStorage.getItem('loggedInUserId');
+                if (!userId) {
+                    console.error('No logged-in user found.');
+                    return;
+                }
+        
+                const userRef = ref(database, `users/${userId}`);
+        
+                try {
+                    const userSnapshot = await get(userRef);
+                    if (!userSnapshot.exists()) {
+                        console.error('User data not found.');
+                        return;
+                    }
+        
+                    const vehicleNumber = userSnapshot.val().vehicleNumber;
+                    console.log('Logged-in User Vehicle Number:', vehicleNumber);  // Debugging log
+
+                    const historyRef = ref(database, 'vehicle_history');
+                    const historySnapshot = await get(historyRef);
+
+                    const historyTableBody = document.getElementById('historyTableBody');
+                    historyTableBody.innerHTML = '';  // Clear existing table rows
+        
+                    if (historySnapshot.exists()) {
+                        const allHistory = Object.values(historySnapshot.val());
+                        console.log('All History:', allHistory);  // Debugging log
+
+                        // Filter records by vehicle number and sort them by timestamp in descending order
+                        const filteredHistory = allHistory
+                            .filter(record => record.license_plate.toLowerCase() === vehicleNumber.toLowerCase())
+                            .sort((a, b) => b.timestamp - a.timestamp); // Sort by descending timestamp
+                        
+                        // Add each record to the table
+                        if (filteredHistory.length > 0) {
+                            filteredHistory.forEach((record) => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td>${new Date(record.timestamp).toLocaleString()}</td>
+                                    <td>${record.distance || 'N/A'}</td>
+                                    <td>${record.type}</td>
+                                    <td>${record.amount || 'N/A'}</td>
+                                    <td>${record.duration || 'N/A'}</td>
+                                `;
+                                historyTableBody.appendChild(row);
+                            });
+                        } else {
+                            historyTableBody.innerHTML = '<tr><td colspan="5">No history found for this vehicle.</td></tr>';
+                        }
+                    } else {
+                        historyTableBody.innerHTML = '<tr><td colspan="5">No history found.</td></tr>';
+                    }
+                } catch (error) {
+                    console.error('Error fetching vehicle history:', error.message);
+                }
+            }
+        
+            // Call the function when the page loads
+            window.onload = displayVehicleHistory;
+        </script>
+        
+    </main>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet</title>
+    <link rel="stylesheet" href="stylesforwallet.css">
+</head>
+<body>
+    <header>
+        <h1>Wallet Management</h1>
+    </header>
+    <main>
+        <!-- Check Wallet Balance Button -->
+        <button onclick="checkBalance()">Check Wallet Balance</button>
+
+        <!-- Top-up Form -->
+        <form id="login-form">
+            <label for="topup-amount">Top-Up Amount:</label>
+            <input type="number" id="topup-amount" min="0" required>
+
+            <!-- Payment Method Dropdown -->
+            <label for="payment-method">Select Payment Method:</label>
+            <select id="payment-method" onchange="handlePaymentMethodChange()" required>
+                <option value="">-- Select Payment Method --</option>
+                <option value="upi">UPI</option>
+                <option value="card">Credit/Debit Card</option>
+            </select>
+
+            <!-- UPI ID Field (Hidden by Default) -->
+            <div id="upi-section" style="display:none;">
+                <label for="upi-id">UPI ID:</label>
+                <input type="text" id="upi-id">
+            </div>
+
+            <!-- Card Details Section (Hidden by Default) -->
+            <div id="card-  section" style="display:none;">
+                <label for="card-number">Card Number:</label>
+                <input type="text" id="card-number" maxlength="16" pattern="\d{16}" placeholder="1234 5678 9123 4567">
+
+                <label for="card-expiry">Expiry Date:</label>
+                <input type="text" id="card-expiry" maxlength="5" pattern="\d{2}/\d{2}" placeholder="MM/YY">
+
+                <label for="card-cvv">CVV:</label>
+                <input type="text" id="card-cvv" maxlength="3" pattern="\d{3}" placeholder="123">
+            </div>
+
+            <button type="button" onclick="topUp()">Top-Up Wallet</button>
+        </form>
+    </main>
+    <div class="an">
+        <a href="dashboard.html">Back to Dashboard</a>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script>
+        // Handle showing UPI ID or Card Details input field based on payment method selection
+        function handlePaymentMethodChange() {
+            const paymentMethod = document.getElementById('payment-method').value;
+            const upiSection = document.getElementById('upi-section');
+            const cardSection = document.getElementById('card-section');
+
+            // Show/hide sections based on the selected payment method
+            if (paymentMethod === 'upi') {
+                upiSection.style.display = 'block'; // Show UPI ID input
+                cardSection.style.display = 'none'; // Hide Card input
+            } else if (paymentMethod === 'card') {
+                cardSection.style.display = 'block'; // Show Card input
+                upiSection.style.display = 'none'; // Hide UPI ID input
+            } else {
+                upiSection.style.display = 'none';
+                cardSection.style.display = 'none';
+            }
+        }
+
+        // Handle top-up process with payment method
+        function topUp() {
+            const amount = parseFloat(document.getElementById('topup-amount').value);
+            const paymentMethod = document.getElementById('payment-method').value;
+
+            if (amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            if (!paymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+
+            // Handle UPI Payment
+            if (paymentMethod === 'upi') {
+                const upiId = document.getElementById('upi-id').value;
+
+                if (!upiId) {
+                    alert('Please enter your UPI ID');
+                    return;
+                }
+
+                // Simulate UPI payment processing
+                alert('Processing UPI payment for UPI ID: ' + upiId);
+                // Assuming payment was successful, proceed with top-up
+                topUpWallet(amount);
+            }
+
+            // Handle Card Payment
+            else if (paymentMethod === 'card') {
+                const cardNumber = document.getElementById('card-number').value;
+                const cardExpiry = document.getElementById('card-expiry').value;
+                const cardCVV = document.getElementById('card-cvv').value;
+
+                // Validate card details
+                if (!validateCardDetails(cardNumber, cardExpiry, cardCVV)) {
+                    alert('Please enter valid card details');
+                    return;
+                }
+
+                // Simulate card payment processing
+                alert('Processing payment for card: ' + cardNumber);
+                // Assuming payment was successful, proceed with top-up
+                topUpWallet(amount);
+            }
+        }
+
+        // Function to validate card details (simple validation for demo purposes)
+        function validateCardDetails(cardNumber, cardExpiry, cardCVV) {
+            const cardNumberPattern = /^\d{16}$/;
+            const cardExpiryPattern = /^\d{2}\/\d{2}$/;
+            const cardCVVPattern = /^\d{3}$/;
+
+            return cardNumberPattern.test(cardNumber) &&
+                   cardExpiryPattern.test(cardExpiry) &&
+                   cardCVVPattern.test(cardCVV);
+        }
+    </script>
+</body>
+</html>

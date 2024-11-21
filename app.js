@@ -104,7 +104,7 @@
                     alert('Login successful!');
                     const user = userCredentials.user;
                     localStorage.setItem('loggedInUserId', user.uid);
-                    window.location.href = 'wallet.html'; // Redirect to wallet page after login
+                    window.location.href = 'dashboard.html'; // Redirect to wallet page after login
                 })
                 .catch((error) => {
                     const errorCode = error.code;

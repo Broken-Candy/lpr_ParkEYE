@@ -104,7 +104,7 @@
                     alert('Login successful!');
                     const user = userCredentials.user;
                     localStorage.setItem('loggedInUserId', user.uid);
-                    window.location.href = 'dashboard.html'; // Redirect to wallet page after login
+                    window.location.href = 'wallet.html'; // Redirect to wallet page after login
                 })
                 .catch((error) => {
                     const errorCode = error.code;
@@ -206,102 +206,102 @@
         onChildAdded(ref(database, 'detected_plates'), async (snapshot) => {
             const newRecord = snapshot.val();
             const { camera, license_plate, timestamp, processed } = newRecord;
-
+        
             // Check if the record is marked as processed. If so, skip it.
             if (processed) {
                 console.log(`Record already processed: ${license_plate}, timestamp: ${timestamp}`);
                 return;
             }
-
+        
             if (!camera || !license_plate || !timestamp) {
                 console.error('Invalid record:', newRecord);
                 return;
             }
-
+        
             try {
                 // Reference to the history table
                 const historyRef = ref(database, 'vehicle_history');
-
+        
                 // Check if the record with this timestamp already exists in vehicle_history
                 const historySnapshot = await get(historyRef);
                 const historyRecords = historySnapshot.exists() ? Object.values(historySnapshot.val()) : [];
-
+        
                 const isDuplicate = historyRecords.some(record =>
                     record.license_plate === license_plate &&
                     record.timestamp === timestamp // Ensure timestamps match
                 );
-
+        
                 if (isDuplicate) {
                     console.log(`Duplicate entry detected for license_plate: ${license_plate}, timestamp: ${timestamp}`);
                     return;
                 }
-
+        
                 const camerasSnapshot = await get(ref(database, 'cameras'));
                 const cameras = camerasSnapshot.val();
-
+        
                 if (!cameras) {
                     console.error('No cameras found in the database.');
                     return;
                 }
-
+        
                 const firstCamera = Object.values(cameras).find(cam => cam.camNo === camera);
                 if (!firstCamera) {
                     console.error(`Camera not found for camNo: ${camera}`);
                     return;
                 }
-
+        
                 const { latitude: lat1, longitude: lon1 } = firstCamera;
-
+        
                 // Check for the second record
                 const platesSnapshot = await get(ref(database, 'detected_plates'));
                 const plates = platesSnapshot.val();
-
+        
                 if (!plates) {
                     console.error('No detected plates found in the database.');
                     return;
                 }
-
+        
                 const secondRecord = Object.values(plates).find(record =>
                     record.license_plate === license_plate && record.camera !== camera && !record.processed
                 );
-
+        
                 if (!secondRecord) {
                     // If no second record is found, mark the first record as waiting
                     console.log(`No second record found for license_plate: ${license_plate}, timestamp: ${timestamp}. Marking first record as "waiting"`);
                     await update(ref(database, `detected_plates/${snapshot.key}`), { status: 'waiting for second record' });
                     return;
                 }
-
+        
                 // If we find the second record, process the pair
                 const secondCamera = Object.values(cameras).find(cam => cam.camNo === secondRecord.camera);
                 if (!secondCamera) {
                     console.error(`Second camera not found for camNo: ${secondRecord.camera}`);
                     return;
                 }
-
+        
                 const { latitude: lat2, longitude: lon2 } = secondCamera;
-
+        
                 const distance = haversine(lat1, lon1, lat2, lon2);
                 const type = distance > 0.5 ? 'toll' : 'parking';
-
+        
                 const userRef = ref(database, 'users');
-
+        
                 let amount = 0;
                 let duration = 0;
-
+        
                 let entryTime = new Date(secondRecord.timestamp); // Entry time for parking
                 if (type === 'toll') {
                     entryTime = new Date(timestamp); // Use timestamp of the first record for toll
                 }
-
+        
                 if (type === 'toll') {
-                    amount = distance * 5; // Example: $5 per km
+                    amount = distance * 5; // Example: 5 rupees per km
                 } else {
                     const exitTime = new Date(newRecord.timestamp);
                     duration = Math.abs(exitTime - entryTime) / (1000 * 60); // Duration in minutes
-                    amount = duration * 2; // Example: $2 per minute
+                    amount = duration * 0.5; // Example: 0.5 rupees per minute
                 }
-
+        
                 // Deduct the amount from the user's wallet balance and log history
                 const userSnapshot = await get(userRef);
                 if (userSnapshot.exists()) {
@@ -309,43 +309,23 @@
                     const userKey = Object.keys(users).find(
                         uid => users[uid].vehicleNumber === license_plate
                     );
-
+        
                     if (userKey) {
                         const user = users[userKey];
                         const currentBalance = user.walletBalance || 0;
-
+        
                         if (currentBalance >= amount) {
                             const newBalance = currentBalance - amount;
-
+        
                             // Update the user's wallet balance
                             await update(ref(database, `users/${userKey}`), {
                                 walletBalance: newBalance
                             });
-                            // Function to check if the entry already exists in vehicle_history
-                            async function isDuplicateHistoryEntry(license_plate, timestamp) {
-                                const historyRef = ref(database, 'vehicle_history');
-                                const historySnapshot = await get(historyRef);
-                                if (historySnapshot.exists()) {
-                                    const historyRecords = historySnapshot.val();
-                                    return Object.values(historyRecords).some(record =>
-                                        record.license_plate === license_plate && record.timestamp === timestamp
-                                    );
-                                }
-                                return false;
-                            }
-
-                            // Modify the section where the history is pushed
-                            const isDuplicate = await isDuplicateHistoryEntry(license_plate, entryTime.toISOString());
-                            if (isDuplicate) {
-                                console.log(`Duplicate entry detected for license_plate: ${license_plate}, timestamp: ${entryTime.toISOString()}`);
-                                return; // Exit the function if the entry already exists
-                            }
-
-                            // Push the history to vehicle_history
-                            await push(historyRef, historyData);
-
-
-                            // Push the transaction to vehicle_history
+        
+                            // Replace invalid characters in entryTime to create a valid Firebase key
+                            const sanitizedEntryTime = entryTime.toISOString().replace(/[\.\#\$\[\]]/g, '_');
+        
+                            // Data to be stored
                             const historyData = {
                                 license_plate,
                                 distance: distance.toFixed(2),
@@ -355,14 +335,18 @@
                                 balance: newBalance.toFixed(2), // Remaining balance
                                 timestamp: entryTime.toISOString() // Use the entry time as timestamp
                             };
-
-                            await push(historyRef, historyData);
-
+        
+                            // Create a unique reference using license_plate and sanitizedEntryTime
+                            const historyEntryRef = ref(database, `vehicle_history/${license_plate}_${sanitizedEntryTime}`);
+        
+                            // Push the history data using the unique key
+                            await set(historyEntryRef, historyData);
+        
+                            console.log(`Processed and stored in vehicle_history for license_plate: ${license_plate}`);
+        
                             // Mark both records as processed
                             await update(ref(database, `detected_plates/${snapshot.key}`), { processed: true });
                             await update(ref(database, `detected_plates/${secondRecord.key}`), { processed: true });
-
-                            console.log(`Processed and stored in vehicle_history for license_plate: ${license_plate}`);
                         } else {
                             console.error(`Insufficient wallet balance for vehicle number: ${license_plate}`);
                         }
@@ -376,5 +360,6 @@
                 console.error('Error processing detected plates:', error.message);
             }
         });
+        
             
         export { database };

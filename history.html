@@ -16,10 +16,10 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Distance</th>
+                    <th>Distance (km)</th>
                     <th>Type</th>
-                    <th>Amount</th>
-                    <th>Duration</th>
+                    <th>Amount (₹)</th>
+                    <th>Duration (min)</th>
                 </tr>
             </thead>
             <tbody id="historyTableBody"></tbody>
@@ -31,12 +31,13 @@
             import { database } from "./app.js";
         
             async function displayVehicleHistory() {
-                const userId = localStorage.getItem('loggedInUserId');
+                const userId = localStorage.getItem('loggedInUserId'); // Retrieve logged-in user ID
                 if (!userId) {
                     console.error('No logged-in user found.');
                     return;
                 }
         
+                // Reference to the logged-in user's data in the "users" table
                 const userRef = ref(database, `users/${userId}`);
         
                 try {
@@ -46,25 +47,27 @@
                         return;
                     }
         
+                    // Get the vehicle number of the logged-in user
                     const vehicleNumber = userSnapshot.val().vehicleNumber;
-                    console.log('Logged-in User Vehicle Number:', vehicleNumber);  // Debugging log
+                    console.log('Logged-in User Vehicle Number:', vehicleNumber);
 
+                    // Reference to the "vehicle_history" table
                     const historyRef = ref(database, 'vehicle_history');
                     const historySnapshot = await get(historyRef);
 
                     const historyTableBody = document.getElementById('historyTableBody');
-                    historyTableBody.innerHTML = '';  // Clear existing table rows
+                    historyTableBody.innerHTML = ''; // Clear existing table rows
         
                     if (historySnapshot.exists()) {
+                        // Fetch all history records and filter them for the logged-in user's vehicle
                         const allHistory = Object.values(historySnapshot.val());
-                        console.log('All History:', allHistory);  // Debugging log
+                        console.log('All History:', allHistory);
 
-                        // Filter records by vehicle number and sort them by timestamp in descending order
                         const filteredHistory = allHistory
                             .filter(record => record.license_plate.toLowerCase() === vehicleNumber.toLowerCase())
-                            .sort((a, b) => b.timestamp - a.timestamp); // Sort by descending timestamp
+                            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by descending timestamp
                         
-                        // Add each record to the table
+                        // Display records in the table
                         if (filteredHistory.length > 0) {
                             filteredHistory.forEach((record) => {
                                 const row = document.createElement('tr');
@@ -78,9 +81,11 @@
                                 historyTableBody.appendChild(row);
                             });
                         } else {
+                            // No records for this vehicle
                             historyTableBody.innerHTML = '<tr><td colspan="5">No history found for this vehicle.</td></tr>';
                         }
                     } else {
+                        // No records in the "vehicle_history" table
                         historyTableBody.innerHTML = '<tr><td colspan="5">No history found.</td></tr>';
                     }
                 } catch (error) {
@@ -91,7 +96,7 @@
             // Call the function when the page loads
             window.onload = displayVehicleHistory;
         </script>
-        
     </main>
 </body>
 </html>
+
